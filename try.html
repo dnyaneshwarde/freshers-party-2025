@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Freshers Party 2025 - GSG College (Admin)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --accent1:#8e2de2; --accent2:#4a00e0; --muted:#f3f4f6;
+      --card-bg:#ffffff;
+    }
+    *{box-sizing:border-box}
+    body{font-family:"Poppins",sans-serif;margin:0;background:linear-gradient(180deg,#fafafa 0%, #fff 100%);color:#222;}
+    header{background:linear-gradient(90deg,var(--accent2),var(--accent1));color:#fff;padding:28px 20px;text-align:center}
+    header h1{margin:0;font-size:28px}
+    header p{margin:6px 0 0;opacity:0.95}
+
+    .container{max-width:1100px;margin:28px auto;padding:0 18px;}
+    .flex{display:flex;gap:18px}
+    .card{background:var(--card-bg);border-radius:12px;padding:16px;box-shadow:0 6px 18px rgba(15,15,15,0.06)}
+    .grid-2{display:grid;grid-template-columns:1fr 380px;gap:18px}
+    h2{color:var(--accent1);margin:0 0 12px;font-size:20px}
+
+    /* Members */
+    .members{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+    .member-card{padding:12px;text-align:center;border-radius:10px}
+    .member-card img{width:90px;height:90px;border-radius:50%;object-fit:cover;border:4px solid var(--muted)}
+    .member-card h3{margin:10px 0 4px;font-size:16px;color:var(--accent2)}
+    .member-card p{margin:0;color:#555;font-size:14px}
+
+    /* Forms */
+    label{display:block;font-size:13px;margin:8px 0 6px;color:#333}
+    input[type="text"], input[type="number"], input[type="file"], select, textarea{
+      width:100%;padding:10px;border-radius:8px;border:1px solid #e6e6e6;font-size:14px;background:#fff
+    }
+    .btn{display:inline-block;padding:8px 12px;border-radius:8px;border:0;cursor:pointer;font-weight:600}
+    .btn-primary{background:var(--accent1);color:#fff}
+    .btn-ghost{background:transparent;border:1px solid #ddd;color:#333}
+    .small{padding:6px 8px;font-size:13px;border-radius:7px}
+
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid #f0f0f0;text-align:left}
+    th{background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#fff}
+
+    /* Admin panel */
+    .admin-panel{display:none;margin-top:18px}
+    .admin-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .right{display:flex;gap:8px;align-items:center}
+
+    /* Login modal */
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:40}
+    .login-box{width:360px;background:#fff;padding:20px;border-radius:12px;box-shadow:0 12px 50px rgba(0,0,0,0.25)}
+    .login-box h3{margin:0 0 8px}
+    .muted{color:#666;font-size:13px}
+
+    /* small helpers */
+    .text-right{text-align:right}
+    .mt12{margin-top:12px}
+    .mb8{margin-bottom:8px}
+    .gap8{gap:8px}
+    .center{text-align:center}
+    .img-thumb{width:58px;height:58px;border-radius:8px;object-fit:cover;border:1px solid #eee}
+
+    @media(max-width:880px){
+      .grid-2{grid-template-columns:1fr}
+      .admin-panel{margin-top:14px}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Freshers Party 2025 — GSG College</h1>
+    <p>Official organizers, expenses & gallery (Admin editable)</p>
+  </header>
+
+  <div class="container">
+    <!-- Top -->
+    <div class="flex" style="justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div>
+        <strong>Event:</strong> Freshers Party 2025 • <span class="muted">GSG College</span>
+      </div>
+      <div class="right">
+        <button class="btn btn-primary small" id="openLoginBtn">Admin Login</button>
+        <button class="btn btn-ghost small" id="viewPublicBtn">View Public</button>
+      </div>
+    </div>
+
+    <!-- Public view (editable live) -->
+    <div id="publicView" class="card">
+      <div class="grid-2">
+        <!-- Left: members + gallery -->
+        <div>
+          <section id="membersSection" class="mb12">
+            <h2>Our Organizers</h2>
+            <div id="membersContainer" class="members">
+              <!-- member cards injected here -->
+            </div>
+          </section>
+
+          <section id="gallerySection" class="mt12">
+            <h2>Gallery</h2>
+            <div id="galleryContainer" class="flex" style="flex-wrap:wrap;gap:10px">
+              <!-- gallery thumbs -->
+            </div>
+          </section>
+        </div>
+
+        <!-- Right: expenses -->
+        <div>
+          <section>
+            <h2>Expenses Breakdown</h2>
+            <table class="card" style="margin:0">
+              <thead>
+                <tr><th>Item</th><th>Amount (₹)</th></tr>
+              </thead>
+              <tbody id="expensesTbody">
+                <!-- expense rows -->
+              </tbody>
+              <tfoot>
+                <tr><th>Total</th><th id="totalAmount">0</th></tr>
+              </tfoot>
+            </table>
+            <div style="margin-top:14px">
+              <canvas id="expenseChart" style="width:100%;max-width:400px"></canvas>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="adminPanel" class="admin-panel card">
+      <div class="admin-top">
+        <div>
+          <strong>Admin Dashboard</strong>
+          <div class="muted">Edit members, expenses & gallery. Changes saved locally in your browser.</div>
+        </div>
+        <div class="right">
+          <button class="btn btn-ghost small" id="logoutBtn">Logout</button>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <!-- Members Form -->
+        <div class="card">
+          <h3 style="margin:0 0 8px">Add Organizer</h3>
+          <label>Name</label>
+          <input id="memberName" type="text" placeholder="Full name">
+          <label>Role</label>
+          <input id="memberRole" type="text" placeholder="e.g., Decoration Head">
+          <label>Photo (choose image)</label>
+          <input id="memberPhoto" type="file" accept="image/*">
+          <div style="margin-top:10px">
+            <button class="btn btn-primary" id="addMemberBtn">Add Organizer</button>
+            <button class="btn btn-ghost" id="clearMemberFormBtn">Clear</button>
+          </div>
+          <div class="muted mt12">Tip: Images saved as small Data URLs in browser storage.</div>
+        </div>
+
+        <!-- Expenses Form -->
+        <div class="card">
+          <h3 style="margin:0 0 8px">Add Expense</h3>
+          <label>Item</label>
+          <input id="expenseItem" type="text" placeholder="Venue / DJ / Food">
+          <label>Amount (₹)</label>
+          <input id="expenseAmount" type="number" placeholder="e.g., 10000" min="0">
+          <div style="margin-top:10px">
+            <button class="btn btn-primary" id="addExpenseBtn">Add Expense</button>
+            <button class="btn btn-ghost" id="clearExpenseFormBtn">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lists -->
+      <div style="margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card">
+          <h3 style="margin:0 0 8px">Organizers (Manage)</h3>
+          <div id="manageMembersList" style="display:flex;flex-direction:column;gap:10px;max-height:320px;overflow:auto">
+            <!-- member items -->
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin:0 0 8px">Expenses (Manage)</h3>
+          <div id="manageExpensesList" style="display:flex;flex-direction:column;gap:10px;max-height:320px;overflow:auto">
+            <!-- expense items -->
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
+        <div>
+          <h3 style="margin:0 0 8px">Gallery Upload</h3>
+          <input id="galleryPhoto" type="file" accept="image/*" multiple>
+        </div>
+        <div class="muted">Select images to add to gallery. Remove from manage view.</div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Login overlay -->
+  <div id="loginOverlay" class="overlay" style="display:none">
+    <div class="login-box">
+      <h3>Admin Login</h3>
+      <div class="muted mb8">Use <strong>user1</strong> / <strong>2025</strong> for demo</div>
+      <label>Username</label>
+      <input id="loginUser" type="text" placeholder="username">
+      <label>Password</label>
+      <input id="loginPass" type="text" placeholder="password">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+        <button class="btn btn-primary" id="loginBtn">Login</button>
+        <button class="btn btn-ghost" id="closeLoginBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Templates and scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    /***********************
+     * Simple Client-side admin system
+     * Username: user1  Password: 2025
+     * Data stored in localStorage under key 'gsg_freshers_2025'
+     ***********************/
+
+    // Default demo data
+    const DEFAULT_DATA = {
+      members: [
+        {id: genId(), name:'Rahul Sharma', role:'Core Team Lead', photo: 'https://via.placeholder.com/150'},
+        {id: genId(), name:'Priya Singh', role:'Decoration Head', photo: 'https://via.placeholder.com/150'},
+        {id: genId(), name:'Amit Deshmukh', role:'Food Team', photo: 'https://via.placeholder.com/150'},
+        {id: genId(), name:'Sakshi Patil', role:'Music & DJ', photo: 'https://via.placeholder.com/150'}
+      ],
+      expenses: [
+        {id: genId(), item:'Venue', amount:10000},
+        {id: genId(), item:'Decoration', amount:5000},
+        {id: genId(), item:'DJ & Music', amount:7000},
+        {id: genId(), item:'Food', amount:15000},
+        {id: genId(), item:'Misc', amount:3000}
+      ],
+      gallery: [
+        'https://via.placeholder.com/400x250',
+        'https://via.placeholder.com/400x250?text=Food',
+        'https://via.placeholder.com/400x250?text=DJ'
+      ]
+    };
+
+    const STORAGE_KEY = 'gsg_freshers_2025_v1';
+    let state = loadState();
+
+    // Chart
+    let chart = null;
+
+    // DOM refs
+    const membersContainer = document.getElementById('membersContainer');
+    const manageMembersList = document.getElementById('manageMembersList');
+    const expensesTbody = document.getElementById('expensesTbody');
+    const manageExpensesList = document.getElementById('manageExpensesList');
+    const totalAmountEl = document.getElementById('totalAmount');
+    const galleryContainer = document.getElementById('galleryContainer');
+    const adminPanel = document.getElementById('adminPanel');
+    const loginOverlay = document.getElementById('loginOverlay');
+    const openLoginBtn = document.getElementById('openLoginBtn');
+    const closeLoginBtn = document.getElementById('closeLoginBtn');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const viewPublicBtn = document.getElementById('viewPublicBtn');
+
+    // forms
+    const addMemberBtn = document.getElementById('addMemberBtn');
+    const memberName = document.getElementById('memberName');
+    const memberRole = document.getElementById('memberRole');
+    const memberPhoto = document.getElementById('memberPhoto');
+    const clearMemberFormBtn = document.getElementById('clearMemberFormBtn');
+
+    const addExpenseBtn = document.getElementById('addExpenseBtn');
+    const expenseItem = document.getElementById('expenseItem');
+    const expenseAmount = document.getElementById('expenseAmount');
+    const clearExpenseFormBtn = document.getElementById('clearExpenseFormBtn');
+
+    const galleryPhoto = document.getElementById('galleryPhoto');
+
+    // login fields
+    const loginUser = document.getElementById('loginUser');
+    const loginPass = document.getElementById('loginPass');
+
+    // events
+    openLoginBtn.addEventListener('click', ()=> { loginOverlay.style.display='flex'; loginUser.value=''; loginPass.value=''; });
+    closeLoginBtn.addEventListener('click', ()=> { loginOverlay.style.display='none'; });
+    loginBtn.addEventListener('click', handleLogin);
+    logoutBtn.addEventListener('click', handleLogout);
+    viewPublicBtn.addEventListener('click', ()=> { adminPanel.style.display='none'; loginOverlay.style.display='none'; });
+
+    addMemberBtn.addEventListener('click', handleAddMember);
+    clearMemberFormBtn.addEventListener('click', ()=> { memberName.value=''; memberRole.value=''; memberPhoto.value=''; });
+
+    addExpenseBtn.addEventListener('click', handleAddExpense);
+    clearExpenseFormBtn.addEventListener('click', ()=> { expenseItem.value=''; expenseAmount.value=''; });
+
+    galleryPhoto.addEventListener('change', handleGalleryUpload);
+
+    // init
+    renderAll();
+
+    // ---------- functions ----------
+    function genId(){ return 'id_' + Math.random().toString(36).slice(2,9); }
+
+    function loadState(){
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw){ localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_DATA)); return JSON.parse(JSON.stringify(DEFAULT_DATA)); }
+        return JSON.parse(raw);
+      } catch(e){
+        console.error('load error',e);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_DATA));
+        return JSON.parse(JSON.stringify(DEFAULT_DATA));
+      }
+    }
+
+    function saveState(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      renderAll();
+    }
+
+    function renderAll(){
+      renderMembers();
+      renderExpenses();
+      renderGallery();
+      renderManageLists();
+      updateChart();
+    }
+
+    // Members UI
+    function renderMembers(){
+      membersContainer.innerHTML = '';
+      state.members.forEach(m=>{
+        const div = document.createElement('div');
+        div.className = 'member-card card';
+        div.innerHTML = `
+          <img src="${escapeHtml(m.photo)}" alt="${escapeHtml(m.name)}">
+          <h3>${escapeHtml(m.name)}</h3>
+          <p>${escapeHtml(m.role)}</p>
+        `;
+        membersContainer.appendChild(div);
+      });
+    }
+
+    function renderManageLists(){
+      manageMembersList.innerHTML = '';
+      state.members.forEach(m=>{
+        const el = document.createElement('div');
+        el.style.display='flex'; el.style.gap='10px'; el.style.alignItems='center';
+        el.innerHTML = `
+          <img src="${escapeHtml(m.photo)}" class="img-thumb">
+          <div style="flex:1">
+            <div style="font-weight:600">${escapeHtml(m.name)}</div>
+            <div class="muted" style="font-size:13px">${escapeHtml(m.role)}</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn small" onclick="editMember('${m.id}')">Edit</button>
+            <button class="btn" onclick="deleteMember('${m.id}')">Delete</button>
+          </div>
+        `;
+        manageMembersList.appendChild(el);
+      });
+
+      manageExpensesList.innerHTML = '';
+      state.expenses.forEach(e=>{
+        const el = document.createElement('div');
+        el.style.display='flex'; el.style.justifyContent='space-between'; el.style.alignItems='center';
+        el.innerHTML = `
+          <div>
+            <div style="font-weight:600">${escapeHtml(e.item)}</div>
+            <div class="muted" style="font-size:13px">₹ ${numberWithCommas(e.amount)}</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn small" onclick="editExpense('${e.id}')">Edit</button>
+            <button class="btn" onclick="deleteExpense('${e.id}')">Delete</button>
+          </div>
+        `;
+        manageExpensesList.appendChild(el);
+      });
+
+      // gallery manage - small
+      const gm = document.getElementById('galleryContainer');
+      Array.from(gm.querySelectorAll('.gallery-thumb-manage')).forEach(n=>n.remove()); // cleanup
+      // add delete overlays to gallery thumbs
+      const thumbs = galleryContainer.querySelectorAll('img');
+      thumbs.forEach((img,i)=>{
+        const wrapper = document.createElement('div'); wrapper.style.position='relative';
+        wrapper.style.display='inline-block'; wrapper.style.marginRight='8px';
+        const del = document.createElement('button');
+        del.textContent='✖'; del.title='Remove';
+        del.style.position='absolute'; del.style.right='4px'; del.style.top='4px';
+        del.style.background='rgba(0,0,0,0.6)'; del.style.color='#fff'; del.style.border='0';
+        del.style.borderRadius='6px'; del.style.padding='2px 6px'; del.style.cursor='pointer';
+        del.onclick = ()=>{ if(confirm('Remove this image?')){ state.gallery.splice(i,1); saveState(); } };
+        wrapper.className='gallery-thumb-manage';
+        wrapper.appendChild(img.cloneNode(true)); wrapper.appendChild(del);
+        // replace original
+        galleryContainer.replaceChild(wrapper, img);
+      });
+    }
+
+    // Expenses UI
+    function renderExpenses(){
+      expensesTbody.innerHTML = '';
+      let total = 0;
+      state.expenses.forEach(e=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${escapeHtml(e.item)}</td><td>₹ ${numberWithCommas(e.amount)}</td>`;
+        expensesTbody.appendChild(tr);
+        total += Number(e.amount || 0);
+      });
+      totalAmountEl.textContent = '₹ ' + numberWithCommas(total);
+    }
+
+    // Gallery UI
+    function renderGallery(){
+      galleryContainer.innerHTML = '';
+      state.gallery.forEach(src=>{
+        const img = document.createElement('img');
+        img.src = src; img.style.width='160px'; img.style.height='110px'; img.style.objectFit='cover'; img.style.borderRadius='8px';
+        galleryContainer.appendChild(img);
+      });
+    }
+
+    // Chart
+    function updateChart(){
+      const labels = state.expenses.map(e=>e.item);
+      const data = state.expenses.map(e=>Number(e.amount || 0));
+      const ctx = document.getElementById('expenseChart').getContext('2d');
+      if(chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: labels,
+          datasets: [{ data: data }]
+        },
+        options: {
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+    }
+
+    // Handlers
+    async function handleAddMember(){
+      const name = (memberName.value||'').trim();
+      const role = (memberRole.value||'').trim();
+      if(!name || !role){ alert('Name and role required'); return; }
+      // read file (if any) as dataURL
+      let photoURL = 'https://via.placeholder.com/150';
+      if(memberPhoto.files && memberPhoto.files[0]){
+        photoURL = await fileToDataUrl(memberPhoto.files[0]);
+      }
+      state.members.push({id: genId(), name, role, photo: photoURL});
+      saveState();
+      memberName.value=''; memberRole.value=''; memberPhoto.value='';
+      alert('Organizer added');
+    }
+
+    function handleAddExpense(){
+      const item = (expenseItem.value||'').trim();
+      const amount = Number(expenseAmount.value || 0);
+      if(!item || amount <= 0){ alert('Valid item and amount required'); return; }
+      state.expenses.push({id: genId(), item, amount});
+      saveState();
+      expenseItem.value=''; expenseAmount.value='';
+      alert('Expense added');
+    }
+
+    function handleGalleryUpload(e){
+      const files = Array.from(e.target.files || []);
+      if(files.length===0) return;
+      // read all and push
+      Promise.all(files.map(f=>fileToDataUrl(f))).then(urls=>{
+        state.gallery = state.gallery.concat(urls);
+        saveState();
+        galleryPhoto.value = '';
+        alert('Gallery updated');
+      });
+    }
+
+    // Edit/Delete functions accessible globally (used in onclick strings)
+    window.deleteMember = function(id){
+      if(!confirm('Delete this organizer?')) return;
+      state.members = state.members.filter(m=>m.id !== id);
+      saveState();
+    };
+    window.editMember = function(id){
+      const idx = state.members.findIndex(m=>m.id===id); if(idx<0) return;
+      const m = state.members[idx];
+      const newName = prompt('Edit name', m.name); if(newName===null) return;
+      const newRole = prompt('Edit role', m.role); if(newRole===null) return;
+      m.name = newName.trim() || m.name;
+      m.role = newRole.trim() || m.role;
+      saveState();
+    };
+
+    window.deleteExpense = function(id){
+      if(!confirm('Delete this expense?')) return;
+      state.expenses = state.expenses.filter(e=>e.id !== id);
+      saveState();
+    };
+    window.editExpense = function(id){
+      const idx = state.expenses.findIndex(e=>e.id===id); if(idx<0) return;
+      const e = state.expenses[idx];
+      const newItem = prompt('Edit item', e.item); if(newItem===null) return;
+      const newAmount = prompt('Edit amount (₹)', e.amount); if(newAmount===null) return;
+      e.item = (newItem.trim() || e.item);
+      const am = Number(newAmount);
+      if(!isNaN(am) && am>=0) e.amount = am;
+      saveState();
+    };
+
+    // Login
+    function handleLogin(){
+      const user = (loginUser.value||'').trim();
+      const pass = (loginPass.value||'').trim();
+      // demo credentials
+      if(user === 'user1' && pass === '2025'){
+        loginOverlay.style.display = 'none';
+        adminPanel.style.display = 'block';
+        alert('Logged in as admin');
+      } else {
+        alert('Invalid credentials (demo: user1 / 2025)');
+      }
+    }
+    function handleLogout(){
+      if(confirm('Logout from admin?')) adminPanel.style.display='none';
+    }
+
+    // Helpers
+    function fileToDataUrl(file){
+      return new Promise((res, rej)=>{
+        const r = new FileReader();
+        r.onload = ()=> res(r.result);
+        r.onerror = ()=> rej();
+        r.readAsDataURL(file);
+      });
+    }
+
+    function numberWithCommas(x){ return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    // keyboard shortcuts: press "a" to open admin quick for demo
+    document.addEventListener('keydown', e=>{
+      if(e.key === 'a'){ loginOverlay.style.display='flex'; }
+      if(e.key === 'Escape'){ loginOverlay.style.display='none'; }
+    });
+
+  </script>
+</body>
+</html>
